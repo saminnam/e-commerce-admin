@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
-import PageTitle from "../components/PageTitle";
-import BreadCrumbs from "../components/BreadCrumbs";
+import PageTitle from "../../components/PageTitle";
+import BreadCrumbs from "../../components/BreadCrumbs";
 
 const AddUser = ({ onUserAdded }) => {
   const [formData, setFormData] = useState({

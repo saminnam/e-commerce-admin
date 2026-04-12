@@ -2,9 +2,9 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { IoSearchOutline } from "react-icons/io5";
-import PageTitle from "../components/PageTitle";
-import BreadCrumbs from "../components/BreadCrumbs";
-import Loader from "../components/Loader";
+import PageTitle from "../../components/PageTitle";
+import BreadCrumbs from "../../components/BreadCrumbs";
+import Loader from "../../components/Loader";
 
 const API_BASE_URL = "http://localhost:5000/api"; 
 

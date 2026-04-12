@@ -5,7 +5,6 @@ import { IoIosLaptop } from "react-icons/io";
 import { GoDot } from "react-icons/go";
 import { MdKeyboardArrowRight } from "react-icons/md";
 
-
 const navItems = [
   {
     icon: <IoIosLaptop className="text-2xl text-gray-600 dark:text-gray-400" />,
@@ -13,25 +12,67 @@ const navItems = [
     children: [],
     link: "/dashboard",
   },
-  {
-    icon: <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />,
-    label: "System Users",
+      {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
+    label: "Orders",
     children: [
-      { label: "Add Users", link: "/add-user" },
-      { label: "Manage Users", link: "/user-list" },
+      { label: "Manage Orders", link: "/order-list" },
     ],
   },
-   {
-    icon: <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />,
+  {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
+    label: "Products",
+    children: [
+      { label: "Add Products", link: "/add-product" },
+      { label: "Manage Products", link: "/product-list" },
+    ],
+  },
+  {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
     label: "Blogs",
     children: [
       { label: "Add Blogs", link: "/add-blog" },
       { label: "Manage Blogs", link: "/blog-list" },
     ],
   },
+  {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
+    label: "Sellers",
+    children: [
+      { label: "Manage Sellers", link: "/manage-sellers" },
+    ],
+  },
+  {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
+    label: "Contacts",
+    children: [
+      { label: "Add Contact", link: "/add-contact" },
+      { label: "Manage Enquires", link: "/manage-enquires" },
+    ],
+  },
+  {
+    icon: (
+      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+    ),
+    label: "System Users",
+    children: [
+      { label: "Add Users", link: "/add-user" },
+      { label: "Manage Users", link: "/user-list" },
+    ],
+  },
 ];
 
-const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
+const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mobileSiderBar, setMobileSidebar] = useState(false);
 
@@ -45,15 +86,15 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
     if (window.innerWidth <= 580) {
       setMobileSidebar(true);
     } else {
-      setMobileSidebar(false); 
+      setMobileSidebar(false);
     }
   };
 
   useEffect(() => {
     setSidebarClose();
-    window.addEventListener('resize', setSidebarClose);
+    window.addEventListener("resize", setSidebarClose);
     return () => {
-      window.removeEventListener('resize', setSidebarClose);
+      window.removeEventListener("resize", setSidebarClose);
     };
   }, []);
 
@@ -69,9 +110,17 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
       >
         <div className="p-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src={"https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"} alt="Logo-Gold" className="h-6" />
+            <img
+              src={
+                "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
+              }
+              alt="Logo-Gold"
+              className="h-6"
+            />
             {(sidebarExpanded || hoveringSidebar) && (
-              <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">Invoice System</span>
+              <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
+                Invoice System
+              </span>
             )}
           </div>
         </div>
@@ -102,8 +151,9 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
                 <ul
                   className={`flex flex-col pl-6 pr-2 my-1 overflow-hidden transition-all duration-300 ease-in-out
                     ${
-                      openDropdown === item.label && (sidebarExpanded || hoveringSidebar)
-                        ? "max-h-screen opacity-100" 
+                      openDropdown === item.label &&
+                      (sidebarExpanded || hoveringSidebar)
+                        ? "max-h-screen opacity-100"
                         : "max-h-0 opacity-0"
                     }`}
                 >
@@ -113,7 +163,10 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
                       className="flex font-semibold items-center p-2 gap-2 rounded transition-all duration-300 hover:bg-amber-100 dark:hover:bg-white text-gray-700 dark:hover:text-gray-800 dark:text-gray-200"
                     >
                       <GoDot className="text-sm text-gray-500 dark:text-gray-400" />
-                      <Link to={child.link} className="whitespace-nowrap w-full">
+                      <Link
+                        to={child.link}
+                        className="whitespace-nowrap w-full"
+                      >
                         {child.label}
                       </Link>
                     </li>
@@ -129,12 +182,3 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar, }) => {
 };
 
 export default Sidebar;
-
-
-
-
-
-
-
-
-

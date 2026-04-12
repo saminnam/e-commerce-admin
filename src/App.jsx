@@ -5,10 +5,13 @@ import { Route, Routes } from "react-router-dom";
 // import ProtectedRoute from "./utils/ProtectedRoute";
 import DashboardLayout from "./Layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
-import ManageUsers from "./pages/ManageUsers";
-import AddUser from "./pages/AddUser";
+import ManageUsers from "./pages/admin-users/ManageUsers";
+import AddUser from "./pages/admin-users/AddUser";
 import AddBlog from "./pages/blogs/AddBlog";
 import ManageBlogs from "./pages/blogs/ManageBlogs";
+import ManageEnquiry from "./pages/enquiry/ManageEnquiry";
+import ManageOrders from "./pages/orders/ManageOrders";
+import ManageSellers from "./pages/seller-details/ManageSeller";
 
 const App = () => {
   return (
@@ -23,7 +26,7 @@ const App = () => {
           }
         /> */}
         <Route
-          path="/dashboard"
+          path="/"
           element={
             // <ProtectedRoute>
             <DashboardLayout>
@@ -70,6 +73,47 @@ const App = () => {
             // <ProtectedRoute>
             <DashboardLayout>
               <ManageBlogs />
+            </DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/add-contact"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>{/* <ManageBlogs /> */}</DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manage-enquires"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>
+              <ManageEnquiry />
+            </DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manage-sellers"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>
+              <ManageSellers />
+            </DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/order-list"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>
+              <ManageOrders />
             </DashboardLayout>
             // </ProtectedRoute>
           }

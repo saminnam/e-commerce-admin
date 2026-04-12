@@ -108,24 +108,26 @@ const AddBlog = () => {
 
     try {
       setLoading(true);
+
       const formData = new FormData();
+
       formData.append("title", form.title);
       formData.append("excerpt", form.excerpt);
       formData.append("category", form.category);
       formData.append("readTime", form.readTime);
       formData.append("content", form.content);
       formData.append("date", form.date);
-      formData.append("image", form.image);
 
-      await axios.post("http://localhost:5000/api/blogs", formData);
-
+      // ✅ FIX IMAGE LOGIC
       if (imageType === "file") {
         formData.append("image", selectedFile);
       } else {
         formData.append("image", form.image);
       }
 
+      // ✅ ONLY ONE API CALL
       await axios.post("http://localhost:5000/api/blogs", formData, {
+        
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -142,7 +144,6 @@ const AddBlog = () => {
         content: "",
         date: "",
       });
-
       setPreviewUrl("");
       setSelectedFile(null);
     } catch (err) {
