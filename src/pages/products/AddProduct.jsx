@@ -1,58 +1,552 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  ImagePlus,
+  Trash2,
+  Save,
+  ImageIcon,
+  Layers,
+  DollarSign,
+  ListOrdered,
+  FileText,
+  UploadCloud,
+  Link as LinkIcon,
+  X,
+} from "lucide-react";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     image: "",
+    categoryImage: "",
+    images: [],
     mrp: "",
     price: "",
+    discount: "",
     stock: "",
+    status: "active",
     category: "",
     desc: "",
+    productDetails: "",
+    author: "",
+    publisher: "",
+    rating: "",
+    releasedDate: "",
   });
 
+  const [galleryInput, setGalleryInput] = useState("");
+  const [sourceType, setSourceType] = useState({
+    main: "url",
+    category: "url",
+    gallery: "url",
+  });
+
+  // 🟢 FIXED: Handler to convert files to Base64 strings for DB storage
+  const handleFileChange = (e, name) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, [name]: reader.result })); // This is the Base64 string
+        toast.success(`${name} loaded and ready to save`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 🟢 FIXED: Multi-file gallery handler for Base64
+  const handleGalleryFiles = (e) => {
+    const files = Array.from(e.target.files);
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, reader.result],
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+    toast.success(`${files.length} images added to gallery`);
+  };
+
+  const toggleSource = (section) => {
+    setSourceType((prev) => ({
+      ...prev,
+      [section]: prev[section] === "url" ? "file" : "url",
+    }));
+  };
+
+  useEffect(() => {
+    const mrpVal = parseFloat(formData.mrp) || 0;
+    const discountVal = parseFloat(formData.discount) || 0;
+    if (mrpVal > 0) {
+      const calculatedPrice = mrpVal - (mrpVal * discountVal) / 100;
+      setFormData((prev) => ({ ...prev, price: Math.round(calculatedPrice) }));
+    }
+  }, [formData.mrp, formData.discount]);
+
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "name") {
+        updated.slug = value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+      return updated;
+    });
+  };
+
+  const addGalleryImage = () => {
+    if (galleryInput && !formData.images.includes(galleryInput)) {
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, galleryInput],
+      }));
+      setGalleryInput("");
+    }
+  };
+
+  const removeGalleryImage = (index) => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       await axios.post("http://localhost:5000/api/products", formData);
-      alert("Product Added Successfully");
+
+      // 🟢 1. Trigger the toast
+      toast.success("Product Published Successfully!");
+
+      // 🟢 2. Clear the form state
       setFormData({
         name: "",
         slug: "",
         image: "",
+        categoryImage: "",
+        images: [],
         mrp: "",
         price: "",
+        discount: "",
         stock: "",
+        status: "active",
         category: "",
         desc: "",
+        productDetails: "",
+        author: "",
+        publisher: "",
+        rating: "",
+        releasedDate: "",
       });
+
+      // 🟢 3. Optional: Clear local gallery input state
+      setGalleryInput("");
     } catch (err) {
-      alert(err.response?.data.message);
+      console.error(err);
+      toast.error(err.response?.data.message || "Error publishing product");
     }
   };
 
+  // UI Component for Image Upload Sections
+  const ImageUploadBox = ({ label, name, value, sectionKey }) => (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          {label}
+        </label>
+        <button
+          type="button"
+          onClick={() => toggleSource(sectionKey)}
+          className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100"
+        >
+          {sourceType[sectionKey] === "url"
+            ? "SWITCH TO UPLOAD"
+            : "SWITCH TO URL"}
+        </button>
+      </div>
+
+      {sourceType[sectionKey] === "url" ? (
+        <div className="relative">
+          <LinkIcon
+            size={16}
+            className="absolute left-3 top-3.5 text-slate-400"
+          />
+          <input
+            name={name}
+            value={value || ""}
+            onChange={handleChange}
+            placeholder="Paste image URL here..."
+            className="w-full border border-slate-200 rounded-xl p-3 pl-10 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-900"
+          />
+        </div>
+      ) : (
+        <label className="border-2 border-dashed border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50 hover:border-indigo-300 cursor-pointer transition-all">
+          <UploadCloud className="text-slate-400 mb-1" size={24} />
+          <span className="text-xs text-slate-500">
+            Click to select from folder
+          </span>
+          {/* 🟢 FIXED: Added onChange handler here */}
+          <input
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e, name)}
+          />
+        </label>
+      )}
+
+      {value && (
+        <div className="relative h-32 w-full rounded-xl overflow-hidden border bg-white group">
+          <img
+            src={value}
+            alt="Preview"
+            className="w-full h-full object-contain p-2"
+          />
+          <button
+            type="button"
+            onClick={() => setFormData((prev) => ({ ...prev, [name]: "" }))}
+            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="p-6">
-      <input name="name" placeholder="Name" onChange={handleChange} required />
-      <input name="slug" placeholder="Slug" onChange={handleChange} required />
-      <input name="image" placeholder="Image URL" onChange={handleChange} required />
-      <input name="mrp" placeholder="MRP" type="number" onChange={handleChange} required />
-      <input name="price" placeholder="Price" type="number" onChange={handleChange} required />
-      <input name="stock" placeholder="Stock" type="number" onChange={handleChange} required />
-      <input name="category" placeholder="Category" onChange={handleChange} required />
-      <textarea name="desc" placeholder="Description" onChange={handleChange}></textarea>
-      <button type="submit">Add Product</button>
-    </form>
+    <div className="max-w-6xl mx-auto p-4 md:p-10 bg-slate-50 min-h-screen text-slate-900 font-sans">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900">
+            Add Product
+          </h1>
+          <p className="text-slate-500">
+            Create a new listing with gallery and category details.
+          </p>
+        </div>
+        <button
+          form="product-form"
+          type="submit"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
+        >
+          <Save size={20} /> Publish
+        </button>
+      </div>
+
+      <form
+        id="product-form"
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+      >
+        <div className="lg:col-span-2 space-y-6">
+          {/* General Information */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Layers size={20} className="text-indigo-600" /> General
+              Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Product Name
+                </label>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-900"
+                  placeholder="Product name..."
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  SEO Slug
+                </label>
+                <input
+                  name="slug"
+                  value={formData.slug}
+                  readOnly
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-slate-50 text-slate-500 italic"
+                  placeholder="Auto-generated..."
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Category
+                </label>
+                <input
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                  placeholder="Category..."
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Author/Brand
+                </label>
+                <input
+                  name="author"
+                  value={formData.author}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                  placeholder="Brand..."
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Publisher
+                </label>
+                <input
+                  name="publisher"
+                  value={formData.publisher}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                  placeholder="Publisher..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Media & Gallery */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-8">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <ImageIcon size={20} className="text-blue-600" /> Media & Gallery
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <ImageUploadBox
+                label="Main Product Image"
+                name="image"
+                value={formData.image}
+                sectionKey="main"
+              />
+              <ImageUploadBox
+                label="Category Icon/Image"
+                name="categoryImage"
+                value={formData.categoryImage}
+                sectionKey="category"
+              />
+            </div>
+
+            <div className="pt-6 border-t border-slate-100 space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Additional Gallery
+                </label>
+                <button
+                  type="button"
+                  onClick={() => toggleSource("gallery")}
+                  className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md"
+                >
+                  {sourceType.gallery === "url"
+                    ? "SWITCH TO UPLOAD"
+                    : "SWITCH TO URL"}
+                </button>
+              </div>
+
+              {sourceType.gallery === "url" ? (
+                <div className="flex gap-2">
+                  <input
+                    value={galleryInput}
+                    onChange={(e) => setGalleryInput(e.target.value)}
+                    className="flex-1 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                    placeholder="Paste gallery image link..."
+                  />
+                  <button
+                    type="button"
+                    onClick={addGalleryImage}
+                    className="bg-slate-900 text-white px-6 rounded-xl font-bold"
+                  >
+                    Add
+                  </button>
+                </div>
+              ) : (
+                <label className="w-full h-20 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 hover:border-indigo-300 cursor-pointer">
+                  <UploadCloud size={20} className="text-slate-400 mr-2" />
+                  <span className="text-sm text-slate-500">
+                    Upload Multiple Images
+                  </span>
+                  {/* 🟢 FIXED: Added handleGalleryFiles here */}
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleGalleryFiles}
+                  />
+                </label>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                {formData.images.map((img, index) => (
+                  <div
+                    key={index}
+                    className="relative group w-20 h-20 rounded-xl overflow-hidden border"
+                  >
+                    <img
+                      src={img}
+                      className="w-full h-full object-cover"
+                      alt="Gallery"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Description Section */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <FileText size={20} className="text-emerald-600" /> Descriptions
+            </h2>
+            <textarea
+              name="desc"
+              value={formData.desc}
+              onChange={handleChange}
+              rows="2"
+              className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+              placeholder="Short description..."
+            ></textarea>
+            <textarea
+              name="productDetails"
+              value={formData.productDetails}
+              onChange={handleChange}
+              rows="5"
+              className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900"
+              placeholder="Detailed specifications..."
+            ></textarea>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+          {/* Inventory Card */}
+          <div className="bg-[#111825] text-white p-6 rounded-3xl shadow-xl space-y-6">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <DollarSign size={20} className="text-indigo-400" /> Inventory
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">
+                  MRP (₹)
+                </label>
+                <input
+                  name="mrp"
+                  type="number"
+                  value={formData.mrp}
+                  onChange={handleChange}
+                  className="w-full bg-slate-800 border-none rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">
+                  Discount (%)
+                </label>
+                <input
+                  name="discount"
+                  type="number"
+                  value={formData.discount}
+                  onChange={handleChange}
+                  className="w-full bg-slate-800 border-none rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="p-4 bg-indigo-600/20 border border-indigo-500/30 rounded-2xl">
+              <label className="text-[10px] font-bold text-indigo-300 uppercase block mb-1">
+                Selling Price
+              </label>
+              <span className="text-2xl font-black">
+                ₹{formData.price || 0}
+              </span>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase">
+                Stock Level
+              </label>
+              <input
+                name="stock"
+                type="number"
+                value={formData.stock}
+                onChange={handleChange}
+                className="w-full bg-slate-800 border-none rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Attributes Card */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <ListOrdered size={20} className="text-orange-500" /> Attributes
+            </h2>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Rating (0-5)
+                </label>
+                <input
+                  name="rating"
+                  type="number"
+                  step="0.1"
+                  value={formData.rating}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="active">Visible</option>
+                  <option value="inactive">Hidden</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">
+                  Release Date
+                </label>
+                <input
+                  name="releasedDate"
+                  type="date"
+                  value={formData.releasedDate}
+                  onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 

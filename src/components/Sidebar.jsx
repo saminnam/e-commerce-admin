@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { LuUsersRound } from "react-icons/lu";
 import { IoIosLaptop } from "react-icons/io";
 import { GoDot } from "react-icons/go";
 import { MdKeyboardArrowRight } from "react-icons/md";
+import {
+  ShoppingCart,
+  FileText,
+  Store,
+  Mail,
+  Users,
+  Layers,
+} from "lucide-react";
+import logo from "../assets/logos/logo-bg.png";
 
 const navItems = [
   {
@@ -12,19 +20,15 @@ const navItems = [
     children: [],
     link: "/dashboard",
   },
-      {
-    icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
-    ),
-    label: "Orders",
-    children: [
-      { label: "Manage Orders", link: "/order-list" },
-    ],
-  },
   {
     icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
+      <ShoppingCart className="text-2xl text-gray-600 dark:text-gray-400" />
     ),
+    label: "Orders",
+    children: [{ label: "Manage Orders", link: "/order-list" }],
+  },
+  {
+    icon: <Layers className="text-2xl text-gray-600 dark:text-gray-400" />,
     label: "Products",
     children: [
       { label: "Add Products", link: "/add-product" },
@@ -32,9 +36,7 @@ const navItems = [
     ],
   },
   {
-    icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
-    ),
+    icon: <FileText className="text-2xl text-gray-600 dark:text-gray-400" />,
     label: "Blogs",
     children: [
       { label: "Add Blogs", link: "/add-blog" },
@@ -42,18 +44,12 @@ const navItems = [
     ],
   },
   {
-    icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
-    ),
+    icon: <Store className="text-2xl text-gray-600 dark:text-gray-400" />,
     label: "Sellers",
-    children: [
-      { label: "Manage Sellers", link: "/manage-sellers" },
-    ],
+    children: [{ label: "Manage Sellers", link: "/manage-sellers" }],
   },
   {
-    icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
-    ),
+    icon: <Mail className="text-2xl text-gray-600 dark:text-gray-400" />,
     label: "Contacts",
     children: [
       { label: "Add Contact", link: "/add-contact" },
@@ -61,9 +57,7 @@ const navItems = [
     ],
   },
   {
-    icon: (
-      <LuUsersRound className="text-2xl text-gray-600 dark:text-gray-400" />
-    ),
+    icon: <Users className="text-2xl text-gray-600 dark:text-gray-400" />,
     label: "System Users",
     children: [
       { label: "Add Users", link: "/add-user" },
@@ -111,15 +105,13 @@ const Sidebar = ({ sidebarExpanded, hoveringSidebar, setHoveringSidebar }) => {
         <div className="p-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <img
-              src={
-                "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740&q=80"
-              }
+              src={logo}
               alt="Logo-Gold"
-              className="h-6"
+              className="w-12"
             />
             {(sidebarExpanded || hoveringSidebar) && (
               <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white">
-                Invoice System
+                ADMIN PANEL
               </span>
             )}
           </div>

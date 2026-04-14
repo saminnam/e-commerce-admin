@@ -12,6 +12,9 @@ import ManageBlogs from "./pages/blogs/ManageBlogs";
 import ManageEnquiry from "./pages/enquiry/ManageEnquiry";
 import ManageOrders from "./pages/orders/ManageOrders";
 import ManageSellers from "./pages/seller-details/ManageSeller";
+import AddProduct from "./pages/products/AddProduct";
+import ManageProducts from "./pages/products/ManageProducts";
+import ToastNotification from "../../frontend/src/modals/ToastNotification";
 
 const App = () => {
   return (
@@ -118,7 +121,30 @@ const App = () => {
             // </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/add-product"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>
+              <AddProduct />
+            </DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/product-list"
+          element={
+            // <ProtectedRoute>
+            <DashboardLayout>
+              <ManageProducts />
+            </DashboardLayout>
+            // </ProtectedRoute>
+          }
+        />
       </Routes>
+      <ToastNotification />
     </>
   );
 };
