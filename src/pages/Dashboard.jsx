@@ -1,336 +1,250 @@
 import React, { useEffect, useState } from "react";
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import axios from "axios";
-import BarChart from "../components/BarChart";
+import { 
+  ShoppingCart, Package, Users, DollarSign, TrendingUp, 
+  MessageSquare, Store, Calendar, ArrowUpRight, ArrowDownRight,
+  RefreshCw, Loader2, Activity, CreditCard
+} from "lucide-react";
 
 const API_BASE_URL = "http://localhost:5000/api";
-const Dashboard = () => {
-  const [selectedMonthYear, setSelectedMonthYear] = useState("");
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  const fetchUsers = async () => {
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalProducts: 0,
+    totalCustomers: 0,
+    totalSellers: 0,
+    totalRevenue: 0,
+    pendingEnquiries: 0
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/users`);
-      setUsers(res.data.data || res.data);
+      // Fetch products
+      const productsRes = await axios.get(`${API_BASE_URL}/products`);
+      const products = productsRes.data || [];
+      
+      // Fetch orders
+      const ordersRes = await axios.get(`${API_BASE_URL}/orders`);
+      const orders = ordersRes.data || [];
+      
+      // Fetch sellers
+      const sellersRes = await axios.get(`${API_BASE_URL}/seller`);
+      const sellers = sellersRes.data || [];
+      
+      // Fetch enquiries
+      const enquiriesRes = await axios.get(`${API_BASE_URL}/contact/enquiries`);
+      const enquiries = enquiriesRes.data || [];
+      
+      setStats({
+        totalOrders: orders.length,
+        totalProducts: products.length,
+        totalCustomers: orders.length, // Using orders as proxy for customers
+        totalSellers: sellers.length,
+        totalRevenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
+        pendingEnquiries: enquiries.filter(e => !e.verified).length
+      });
+      
+      setRecentOrders(orders.slice(0, 5));
     } catch (err) {
-      console.error("Failed to fetch users:", err);
+      console.error("Failed to fetch dashboard data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchDashboardData();
   }, []);
 
-  const handleChange = (e) => {
-    setSelectedMonthYear(e.target.value);
-  };
+  const StatCard = ({ title, value, icon, color, trend, trendValue }) => (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-lg transition-all duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-3 rounded-xl ${color}`}>
+          {icon}
+        </div>
+        {trend && (
+          <div className={`flex items-center gap-1 text-xs font-bold ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+            {trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            {trendValue}
+          </div>
+        )}
+      </div>
+      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">{title}</h3>
+      <p className="text-3xl font-black text-slate-800">{value}</p>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="animate-spin text-[#E5B236]" size={48} />
+      </div>
+    );
+  }
+
   return (
-    <main className="flex-1 p-5">
-      <div className="border-b-2 mb-4 pb-2 border-gray-00 font-semibold text-gray-500">
-        <h3>Revenue Since Inception</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-16">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-              <i className="fas fa-bed text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Sales Amount</p>
-              <p className="text-2xl font-semibold text-gray-800">120</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <i className="fas fa-calendar-check text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
-                Total Invoices
-              </p>
-              <p className="text-2xl font-semibold text-gray-800">84</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
-              <i className="fas fa-calendar-day text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Bills</p>
-              <p className="text-2xl font-semibold text-gray-800">12</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-100 text-red-600">
-              <i className="fas fa-calendar-times text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Due Amount</p>
-              <p className="text-2xl font-semibold text-gray-800">8</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-              <i className="fas fa-bed text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
-                Total Products
-              </p>
-              <p className="text-2xl font-semibold text-gray-800">120</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <i className="fas fa-calendar-check text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
-                Total Customers
-              </p>
-              <p className="text-2xl font-semibold text-gray-800">84</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
-              <i className="fas fa-calendar-day text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Paid Bills</p>
-              <p className="text-2xl font-semibold text-gray-800">12</p>
-            </div>
-          </div>
-        </div>
+    <div className="p-6 md:p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-black text-slate-800 mb-2">Dashboard Overview</h1>
+        <p className="text-slate-500">Welcome back! Here's what's happening with your store today.</p>
       </div>
 
-      <div className="border-b-2 flex justify-between mb-4 pb-1 border-gray-300 font-semibold text-gray-500">
-        <h3>Monthly Sales Report</h3>
-        <input
-          type="month"
-          value={selectedMonthYear}
-          onChange={handleChange}
-          className="border border-gray-300 rounded p-1"
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+        <StatCard 
+          title="Total Orders" 
+          value={stats.totalOrders} 
+          icon={<ShoppingCart size={24} className="text-white" />}
+          color="bg-gradient-to-br from-blue-500 to-blue-600"
+          trend="up"
+          trendValue="12%"
+        />
+        <StatCard 
+          title="Products" 
+          value={stats.totalProducts} 
+          icon={<Package size={24} className="text-white" />}
+          color="bg-gradient-to-br from-purple-500 to-purple-600"
+          trend="up"
+          trendValue="8%"
+        />
+        <StatCard 
+          title="Customers" 
+          value={stats.totalCustomers} 
+          icon={<Users size={24} className="text-white" />}
+          color="bg-gradient-to-br from-green-500 to-green-600"
+          trend="up"
+          trendValue="5%"
+        />
+        <StatCard 
+          title="Sellers" 
+          value={stats.totalSellers} 
+          icon={<Store size={24} className="text-white" />}
+          color="bg-gradient-to-br from-orange-500 to-orange-600"
+          trend="up"
+          trendValue="3%"
+        />
+        <StatCard 
+          title="Revenue" 
+          value={`$${stats.totalRevenue.toLocaleString()}`} 
+          icon={<DollarSign size={24} className="text-white" />}
+          color="bg-gradient-to-br from-[#E5B236] to-[#d4a32e]"
+          trend="up"
+          trendValue="15%"
+        />
+        <StatCard 
+          title="Pending Enquiries" 
+          value={stats.pendingEnquiries} 
+          icon={<MessageSquare size={24} className="text-white" />}
+          color="bg-gradient-to-br from-red-500 to-red-600"
+          trend="down"
+          trendValue="2%"
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600">
-              <i className="fas fa-bed text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Sales Amount</p>
-              <p className="text-2xl font-semibold text-gray-800">120</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600">
-              <i className="fas fa-calendar-check text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Paid Invoices</p>
-              <p className="text-2xl font-semibold text-gray-800">84</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
-              <i className="fas fa-calendar-day text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
-                Unpaid Invoice
-              </p>
-              <p className="text-2xl font-semibold text-gray-800">12</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-100 text-red-600">
-              <i className="fas fa-calendar-times text-xl"></i>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Due Amount</p>
-              <p className="text-2xl font-semibold text-gray-800">8</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <BarChart />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">
-              System Users
-            </h2>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Recent Orders */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-800">Recent Orders</h2>
+            <button 
+              onClick={fetchDashboardData}
+              className="p-2 hover:bg-slate-100 rounded-lg transition"
+            >
+              <RefreshCw size={18} className="text-slate-400" />
+            </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="w-full">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Access
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check-in
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Check-out
-                  </th>
-                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th> */}
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user, index) => (
-                  <tr key={user.id || index}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <img
-                            className="h-12 w-12 rounded-full object-cover"
-                            src="https://img.freepik.com/premium-vector/user-profile-icon-flat-style-member-avatar-vector-illustration-isolated-background-human-permission-sign-business-concept_157943-15752.jpg?semt=ais_items_boosted&w=740"
-                            alt=""
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {user.phone}
-                          </div>
-                        </div>
-                      </div>
+              <tbody className="divide-y divide-slate-50">
+                {recentOrders.length > 0 ? recentOrders.map((order, index) => (
+                  <tr key={order._id || index} className="hover:bg-slate-50 transition">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-800">#{order._id?.slice(-6) || `ORD${index + 1}`}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{order.customerName || 'Customer'}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-slate-800">${order.totalAmount || 0}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-600">
+                        {order.status || 'Completed'}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">Not Mentioned</div>
-                      {/* <div className="text-sm text-gray-500">#205</div> */}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      15 May 2023
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      20 May 2023
-                    </td>
-                    {/* <td className="px-6 py-4">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Checked In
-                    </span>
-                  </td> */}
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-8 text-center text-slate-400">
+                      No recent orders
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Client Status
-            </h2>
-          </div>
-          <div className="p-6">
-            {[
-              { label: "Occupied", percent: "70%", color: "green" },
-              { label: "Available", percent: "30%", color: "blue" },
-              { label: "Maintenance", percent: "5%", color: "red" },
-            ].map(({ label, percent, color }) => (
-              <div className="mb-4" key={label}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">
-                    {label}
-                  </span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {percent}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className={`bg-${color}-600 h-2.5 rounded-full`}
-                    style={{ width: percent }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-            <div className="mt-6">
-              <h3 className="text-md font-medium text-gray-800 mb-3">
-                Room Types
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Standard</span>
-                  <span className="text-sm font-medium">40 rooms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Deluxe</span>
-                  <span className="text-sm font-medium">35 rooms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Executive</span>
-                  <span className="text-sm font-medium">25 rooms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Suite</span>
-                  <span className="text-sm font-medium">20 rooms</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: "plus", label: "New Booking", bg: "blue" },
-            { icon: "user-check", label: "Check In", bg: "green" },
-            { icon: "user-times", label: "Check Out", bg: "yellow" },
-            { icon: "bell", label: "Requests", bg: "purple" },
-          ].map(({ icon, label, bg }) => (
-            <button
-              key={label}
-              className={`flex flex-col items-center justify-center p-4 border border-gray-200 rounded-lg hover:bg-${bg}-50 hover:border-${bg}-200 transition`}
-            >
-              <div
-                className={`p-3 rounded-full bg-${bg}-100 text-${bg}-600 mb-2`}
-              >
-                <i className={`fas fa-${icon} text-lg`}></i>
-              </div>
-              <span className="text-sm font-medium text-gray-700">{label}</span>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+          <h2 className="text-lg font-bold text-slate-800 mb-6">Quick Actions</h2>
+          <div className="space-y-3">
+            <button className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-[#E5B236] to-[#d4a32e] text-white rounded-xl font-bold hover:shadow-lg transition-all">
+              <ShoppingCart size={20} />
+              Add New Product
             </button>
-          ))}
+            <button className="w-full flex items-center gap-3 p-4 bg-slate-50 text-slate-700 rounded-xl font-bold hover:bg-slate-100 transition-all">
+              <Users size={20} />
+              Manage Users
+            </button>
+            <button className="w-full flex items-center gap-3 p-4 bg-slate-50 text-slate-700 rounded-xl font-bold hover:bg-slate-100 transition-all">
+              <Store size={20} />
+              View Sellers
+            </button>
+            <button className="w-full flex items-center gap-3 p-4 bg-slate-50 text-slate-700 rounded-xl font-bold hover:bg-slate-100 transition-all">
+              <MessageSquare size={20} />
+              Check Enquiries
+            </button>
+          </div>
         </div>
       </div>
-    </main>
+
+      {/* Activity Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <Activity size={32} />
+            <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">Today</span>
+          </div>
+          <h3 className="text-3xl font-black mb-1">{stats.totalOrders}</h3>
+          <p className="text-white/80 text-sm">New Orders Today</p>
+        </div>
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <DollarSign size={32} />
+            <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">Today</span>
+          </div>
+          <h3 className="text-3xl font-black mb-1">${stats.totalRevenue.toLocaleString()}</h3>
+          <p className="text-white/80 text-sm">Revenue Today</p>
+        </div>
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <Users size={32} />
+            <span className="text-sm font-bold bg-white/20 px-3 py-1 rounded-full">This Week</span>
+          </div>
+          <h3 className="text-3xl font-black mb-1">{stats.totalSellers}</h3>
+          <p className="text-white/80 text-sm">Active Sellers</p>
+        </div>
+      </div>
+    </div>
   );
 };
 

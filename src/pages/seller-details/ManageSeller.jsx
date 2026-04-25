@@ -296,6 +296,33 @@ const ManageSellers = () => {
             {/* Modal Footer */}
             <div className="p-8 border-t bg-slate-50 flex justify-center gap-4">
               <button
+                onClick={() => toggleVerify(selectedSeller._id)}
+                className={`flex items-center gap-2 px-8 py-3 rounded-2xl text-sm font-bold shadow-lg cursor-pointer hover:scale-105 transition-all ${
+                  selectedSeller.isVerified
+                    ? "bg-amber-500 text-white"
+                    : "bg-green-600 text-white"
+                }`}
+              >
+                {selectedSeller.isVerified ? (
+                  <>
+                    <CheckCircle size={18} /> Revert to Pending
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={18} /> Mark as Verified
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  deleteSeller(selectedSeller._id);
+                  setSelectedSeller(null);
+                }}
+                className="bg-red-500 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg cursor-pointer hover:scale-105 transition-all flex items-center gap-2"
+              >
+                <Trash2 size={18} /> Delete Seller
+              </button>
+              <button
                 onClick={() => setSelectedSeller(null)}
                 className="bg-slate-800 text-white px-10 py-3 rounded-2xl text-sm font-bold shadow-lg cursor-pointer hover:scale-105 transition-all"
               >

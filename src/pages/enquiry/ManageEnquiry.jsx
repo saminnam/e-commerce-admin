@@ -16,7 +16,7 @@ const ManageEnquiry = () => {
   const fetchEnquiries = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/contact");
+      const res = await axios.get("http://localhost:5000/api/contact/enquiries");
       setEnquiries(res.data);
     } catch (error) {
       console.error("Error fetching enquiries:", error);
@@ -27,7 +27,7 @@ const ManageEnquiry = () => {
 
   const handleVerify = async (id) => {
     try {
-      const res = await axios.patch(`http://localhost:5000/api/contact/${id}/verify`);
+      const res = await axios.patch(`http://localhost:5000/api/contact/enquiries/${id}/verify`);
       if (res.status === 200) {
         fetchEnquiries(); 
         if (selectedEnquiry) setSelectedEnquiry(null);
@@ -40,7 +40,7 @@ const ManageEnquiry = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Delete this enquiry permanently?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/contact/${id}`);
+        await axios.delete(`http://localhost:5000/api/contact/enquiries/${id}`);
         setEnquiries(enquiries.filter(item => item._id !== id));
         if (selectedEnquiry) setSelectedEnquiry(null);
       } catch (error) {

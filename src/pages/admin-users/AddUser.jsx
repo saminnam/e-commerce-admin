@@ -1,7 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
-import PageTitle from "../../components/PageTitle";
-import BreadCrumbs from "../../components/BreadCrumbs";
+import { UserPlus, Shield, Mail, Phone, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 
 const AddUser = ({ onUserAdded }) => {
   const [formData, setFormData] = useState({
@@ -9,9 +8,13 @@ const AddUser = ({ onUserAdded }) => {
     email: "",
     phone: "",
     password: "",
+    role: "admin",
+    status: "active"
   });
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,40 +27,43 @@ const AddUser = ({ onUserAdded }) => {
     let errors = [];
 
     if (password.length >= 8) strength += 20;
-    else errors.push("Password must be at least 8 characters long.");
+    else errors.push("8+ characters");
 
     if (/[A-Z]/.test(password)) strength += 20;
-    else errors.push("Password must contain at least one uppercase letter.");
+    else errors.push("uppercase");
 
     if (/[a-z]/.test(password)) strength += 20;
-    else errors.push("Password must contain at least one lowercase letter.");
+    else errors.push("lowercase");
 
     if (/[0-9]/.test(password)) strength += 20;
-    else errors.push("Password must contain at least one number.");
+    else errors.push("number");
 
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 20;
-    else errors.push("Password must contain at least one special character.");
+    else errors.push("special character");
 
     setPasswordStrength(Math.min(100, strength));
-    setPasswordError(errors.join(" "));
+    setPasswordError(errors.length > 0 ? `Missing: ${errors.join(", ")}` : "");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (passwordStrength < 100 || passwordError) {
+    if (passwordStrength < 100) {
       alert("Password does not meet requirements.");
       return;
     }
 
+    setLoading(true);
     try {
-      await axios.post(`http://localhost:5000/api/users`, formData);
+      await axios.post(`http://localhost:5000/api/admin-users`, formData);
       alert("User created successfully!");
-      setFormData({ name: "", email: "", phone: "", password: "" });
+      setFormData({ name: "", email: "", phone: "", password: "", role: "admin", status: "active" });
       setPasswordStrength(0);
       setPasswordError("");
       if (onUserAdded) onUserAdded();  
     } catch (err) {
-      alert(err.response?.data.message || "Failed to create user.");
+      alert(err.response?.data?.message || "Failed to create user.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,79 +74,125 @@ const AddUser = ({ onUserAdded }) => {
   };
 
   return (
-    <section className="flex-1 p-6">
-      <div className="pb-2 flex items-center justify-between border-b-2 mb-4 border-gray-300">
-        <PageTitle pageTitle={"Add User"} />
-        <BreadCrumbs pageName={"user-list"} />
-      </div>
-      <div className="bg-white border-2 border-gray-300 rounded shadow relative w-full">
-        <div className="flex p-5 items-start border-b-2 border-gray-300 justify-between">
-          <h3 className="text-xl font-semibold">User Information</h3>
-        </div>
+    <div className="p-6 md:p-10 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#E5B236] to-[#d4a32e] p-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-xl text-white">
+                <UserPlus size={32} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Add New User</h1>
+                <p className="text-white/80 mt-1">Create a new admin user account</p>
+              </div>
+            </div>
+          </div>
 
-        <div className="p-6 space-y-6">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-6 gap-6">
-              <div className="col-span-6 sm:col-span-3">
-                <label className="text-sm font-medium text-gray-900 block mb-2">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                  placeholder="Enter Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
+          {/* Form */}
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <UserPlus size={16} className="text-[#E5B236]" />
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                    placeholder="Enter full name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <Mail size={16} className="text-[#E5B236]" />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                    placeholder="Enter email address"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <Phone size={16} className="text-[#E5B236]" />
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Role */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <Shield size={16} className="text-[#E5B236]" />
+                    Role
+                  </label>
+                  <select
+                    name="role"
+                    className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition bg-white"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="editor">Editor</option>
+                  </select>
+                </div>
               </div>
-              <div className="col-span-6 sm:col-span-3">
-                <label className="text-sm font-medium text-gray-900 block mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                  placeholder="Enter Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-3">
-                <label className="text-sm font-medium text-gray-900 block mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                  placeholder="Enter Phone Number"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-3">
-                <label className="text-sm font-medium text-gray-900 block mb-2">
+
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                  <Lock size={16} className="text-[#E5B236]" />
                   Password
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded focus:ring-cyan-600 focus:border-cyan-600 block w-full p-2.5"
-                  placeholder="Enter Password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    className="w-full p-4 pr-12 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                    placeholder="Enter password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 {formData.password && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-2.5 rounded-full transition-all duration-300 ease-in-out ${getProgressBarColor()}`}
+                        className={`h-2 rounded-full transition-all duration-300 ${getProgressBarColor()}`}
                         style={{ width: `${passwordStrength}%` }}
                       ></div>
                     </div>
@@ -152,19 +204,53 @@ const AddUser = ({ onUserAdded }) => {
                   </div>
                 )}
               </div>
-              <div className="mt-6 border-t col-span-6 sm:col-span-3 border-gray-200 rounded">
+
+              {/* Status */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                  Status
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="active"
+                      checked={formData.status === "active"}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#E5B236] focus:ring-[#E5B236]"
+                    />
+                    <span className="font-medium text-gray-700">Active</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="status"
+                      value="inactive"
+                      checked={formData.status === "inactive"}
+                      onChange={handleChange}
+                      className="w-4 h-4 text-[#E5B236] focus:ring-[#E5B236]"
+                    />
+                    <span className="font-medium text-gray-700">Inactive</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-4">
                 <button
-                  className="text-white bg-blue-700 hover:bg-blue-900 cursor-pointer font-medium rounded text-sm px-5 py-2.5 text-center"
                   type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#E5B236] to-[#d4a32e] text-white py-4 rounded-xl font-bold hover:from-[#d4a32e] hover:to-[#c49226] transition-all shadow-lg disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed"
                 >
-                  Create User
+                  {loading ? <><Loader2 size={20} className="animate-spin"/> Creating User...</> : <><UserPlus size={20} /> Create User</>}
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

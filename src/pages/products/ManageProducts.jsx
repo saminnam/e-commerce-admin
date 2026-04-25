@@ -35,8 +35,9 @@ const ManageProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/products");
-      setProducts(data);
+      const { data } = await axios.get("http://localhost:5000/api/products?limit=1000");
+      const productsData = data.products || data;
+      setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (err) {
       toast.error("Failed to load products");
     }

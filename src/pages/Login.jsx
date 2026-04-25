@@ -1,112 +1,150 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { API_BASE_URL } from "../components/Api";
+import { Lock, Mail, Eye, EyeOff, Shield, Loader2 } from "lucide-react";
 
 function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isChecked, setIsChecked] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    if (!username || !password) {
-      setError("Please enter both username and password.");
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      setLoading(false);
       return;
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/users/login`, {
-        username,
+      const response = await axios.post(`http://localhost:5000/api/admin-users/login`, {
+        email,
         password,
       });
 
-      setError("");
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("adminUser", JSON.stringify(response.data.user));
+      localStorage.setItem("adminToken", response.data.token);
+      
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+
       navigate("/dashboard");
     } catch (error) {
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        setError(
-          error.response.data.message || "An error occurred. Please try again.",
-        );
-      } else {
-        console.error("Error:", error.message);
-        setError("An error occurred. Please try again.");
-      }
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.message || "Invalid credentials. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+      <div className="w-full max-w-md">
+        {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-900 mb-2">
-            Welcome Back!
-          </h1>
-          <p className="text-gray-500">Sign in to your dashboard</p>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-[#E5B236] to-[#d4a32e] rounded-2xl shadow-lg mb-4">
+            <Shield size={40} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-800 mb-2">Admin Portal</h1>
+          <p className="text-slate-500">Sign in to access the dashboard</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-center font-medium">
-              {error}
-            </div>
-          )}
+        {/* Login Card */}
+        <div className="bg-white shadow-2xl rounded-3xl p-8 border border-slate-100">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-center font-medium text-sm border border-red-100">
+                {error}
+              </div>
+            )}
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-1">
-              Username
-            </label>
-            <input
-              type="text"
-              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between mb-6">
-            <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                <Mail size={16} className="text-[#E5B236]" />
+                Email Address
+              </label>
               <input
-                type="checkbox"
-                checked={isChecked}
-                onChange={handleCheckboxChange}
-                className="h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-400"
+                type="email"
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
-              Remember me
-            </label>
-          </div>
+            </div>
 
-          <button
-            type="submit"
-            className="w-full cursor-pointer py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-lg shadow-md hover:from-blue-700 hover:to-blue-600 transition-all"
-          >
-            Log In
-          </button>
-        </form>
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 uppercase tracking-wide">
+                <Lock size={16} className="text-[#E5B236]" />
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full p-4 pr-12 border-2 border-gray-200 rounded-xl focus:border-[#E5B236] focus:ring-2 focus:ring-[#E5B236]/20 outline-none transition"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#E5B236] focus:ring-[#E5B236]"
+                />
+                <span className="text-sm font-medium">Remember me</span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-[#E5B236] to-[#d4a32e] text-white font-bold rounded-xl hover:from-[#d4a32e] hover:to-[#c49226] transition-all shadow-lg disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed"
+            >
+              {loading ? <><Loader2 size={20} className="animate-spin"/> Signing In...</> : <><Lock size={20} /> Sign In</>}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 text-center text-sm text-slate-500">
+            <p>Protected by enterprise-grade security</p>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="text-center mt-8 text-slate-400 text-sm">
+          © 2024 Admin Panel. All rights reserved.
+        </div>
       </div>
     </div>
   );

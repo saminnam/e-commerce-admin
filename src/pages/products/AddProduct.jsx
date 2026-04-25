@@ -225,7 +225,7 @@ const AddProduct = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-10 bg-slate-50 min-h-screen text-slate-900 font-sans">
+    <div className="p-4 md:p-10 bg-slate-50 min-h-screen text-slate-900 font-sans">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900">

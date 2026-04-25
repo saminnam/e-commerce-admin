@@ -6,9 +6,24 @@ import {
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/products?limit=1000");
+      const productsData = res.data.products || res.data;
+      const productMap = {};
+      productsData.forEach((p) => {
+        productMap[p._id] = p;
+      });
+      setProducts(productMap);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -36,6 +51,7 @@ const ManageOrders = () => {
   };
 
   useEffect(() => {
+    fetchProducts();
     fetchOrders();
   }, []);
 
@@ -161,15 +177,18 @@ const ManageOrders = () => {
                  <Section title="Items Summary" icon={<Package size={16}/>}>
                     <div className="bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden">
                       <div className="max-h-[250px] overflow-y-auto p-2">
-                        {selectedOrder.products.map((p, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-3 border-b border-slate-200/50 last:border-0">
-                            <div>
-                              <p className="text-sm font-bold text-slate-800">{p.productName}</p>
-                              <p className="text-[10px] font-black text-slate-400 uppercase">Qty: {p.quantity} × ₹{p.price}</p>
+                        {selectedOrder.products.map((p, idx) => {
+                          const product = products[p.productId];
+                          return (
+                            <div key={idx} className="flex justify-between items-center p-3 border-b border-slate-200/50 last:border-0">
+                              <div>
+                                <p className="text-sm font-bold text-slate-800">{product?.name || "Unknown Product"}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase">Qty: {p.quantity} × ₹{p.price}</p>
+                              </div>
+                              <span className="font-black text-sm text-slate-700">₹{p.price * p.quantity}</span>
                             </div>
-                            <span className="font-black text-sm text-slate-700">₹{p.price * p.quantity}</span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       <div className="p-5 bg-white border-t border-slate-200 flex justify-between items-center">
                         <span className="font-black text-slate-400 uppercase text-xs">Total Amount</span>

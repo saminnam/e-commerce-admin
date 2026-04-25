@@ -31,7 +31,9 @@ const MainContent = ({
   const handleLogout = () => {
     const confirmLogout = window.confirm("Do you want to logout?");
     if (confirmLogout) {
-      localStorage.removeItem("user");
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminUser");
+      localStorage.removeItem("rememberedEmail");
       navigate("/");
     }
   };
